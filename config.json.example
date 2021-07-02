@@ -1,0 +1,13 @@
+{
+    "days_old": 15,
+    "trakt": {
+        "base_url": "https://api.trakt.tv",
+        "id": "xxx",
+        "secret": "xxx",
+        "list": "xx"
+    },
+    "radarr": {
+        "url": "http://192.168.0.10:7878", 
+        "api_key": "xxx"
+    }
+}

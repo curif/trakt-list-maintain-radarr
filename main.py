@@ -16,6 +16,7 @@ from datetime import datetime, timedelta
 
 logging.basicConfig(level=logging.ERROR)
 
+config = {}
 class radarrMovs(object):
     def __init__(self, radarrCli):
       self._radarrMovs = None
@@ -49,7 +50,6 @@ class Application(object):
         self.is_authenticating = Condition()
 
         self.authorization = None
-        self.days_old = 15
         
         # Bind trakt events
         Trakt.on('oauth.token_refreshed', self.on_token_refreshed)
@@ -90,59 +90,41 @@ class Application(object):
      
         #STrakt.configuration.oauth.from_response(self.authorization)   
         Trakt.configuration.defaults.oauth.from_response(self.authorization)
-     
-        self.radarrMovs = radarrMovs(RadarrCli('http://192.168.0.10:7878', '742842f6ea5347acab6791eeb8107b0a'))
         
-        mov = self.radarrMovs.getImdb('tt8332802')
-        print(mov)
-        self.radarrMovs.delete('tt8332802')
+        moviesToDelete = []
+
+        self.radarrMovs = radarrMovs(RadarrCli(config["radarr"]["url"], config["radarr"]["api_key"]))
+        
+        #Movies seen
+        for item in Trakt['sync/history'].get(media='movies', 
+                end_at=datetime.now() - timedelta(days=config["days_old"])):
+            print(' - %-120s (watched_at: %r)' % (
+                 item.title + " (" + str(item.year) + ")",
+                 item.watched_at.strftime('%Y-%m-%d %H:%M:%S')
+            ))
+            #Delete from the Trakt List
+            moviesToDelete.append({
+                                "ids": {
+                                    item.pk[0]:  item.pk[1]
+                                }
+                            }) 
+            #Delete from Radarr
+            mov = self.radarrMovs.getImdb(item.pk[1])
+            if mov:
+              self.radarrMovs.delete(item.pk[1])
+              print("deleted from radarr: {]".format(mov))
+            else:
+              print("... no se encuentra en radarr")
         
     
-        itemABorrar=None
-        for x, item in enumerate(Trakt['users/curif/lists/aBajar'].items(media='movies')):
-            print("=========================================================")
-            print(' - %-120s' % (
-                item.title + " (" + str(item.year) + ")" + str(item.pk),
-                ))
-            if item.pk == ('imdb', 'tt8332802'):
-                itemABorrar = item
-            
-            # mov=None
-            # if item.pk[0] == 'imdb':
-            #     mov = radarr_cli.lookup_movie(imdb_id = item.pk[1])
-            # elif item.pk[0] == 'tmdb':
-            #     mov = radarr_cli.lookup_movie(tmdb_id = item.pk[1])
-            # if mov :
-            #     print("=======", mov.cleanTitle, mov.path)
-            #     print(mov)
-                
-        
-        if itemABorrar:
-            #https://github.com/fuzeman/trakt.py/blob/master/trakt/interfaces/users/lists/list_.py
-            print("borra item " + str(itemABorrar) + str(itemABorrar.pk))
-            result= Trakt['users/curif/lists/aBajar'].remove(
+        #https://github.com/fuzeman/trakt.py/blob/master/trakt/interfaces/users/lists/list_.py
+        print("Delete {} movies from the trakt list {} if they exists".format(len(moviesToDelete), config["trakt"]["list"]))
+        result= Trakt['users/curif/lists/{}'.format(config["trakt"]["list"])].remove(
                 {
-                    "movies": [
-                        {
-                            "ids": {
-                                itemABorrar.pk[0]:  itemABorrar.pk[1]
-                            }
-                        }
-                    ]
+                    "movies": moviesToDelete
                 }
             )
-            print(result)
-            
-    #     for item in Trakt['sync/history'].get(media='movies',per_page= 50, end_at=datetime.now() - timedelta(days=self.days_old)):
-            
-    # #        https://traktpy.readthedocs.io/en/latest/sourcecode/trakt/trakt.objects.movie.html
-    #         print(' - %-120s (watched_at: %r)' % (
-    #             item.title + " (" + str(item.year) + ")",
-    #             item.watched_at.strftime('%Y-%m-%d %H:%M:%S')
-    #         ))
-    #     for item in Trakt['users'].likes('lists', pagination=True):
-    #         print(item)
- 
+        print("movies borradas: {}".format(result["deleted"]["movies"]))
 
 
     def on_aborted(self):
@@ -178,6 +160,8 @@ class Application(object):
         self.is_authenticating.notify_all()
         self.is_authenticating.release()
 
+        self.save_token()
+
     def on_expired(self):
         """Device authentication expired."""
 
@@ -203,15 +187,29 @@ class Application(object):
         self.authorization = authorization
 
         print('Token refreshed - authorization: %r' % self.authorization)
+        self.save_token()
+
+    def save_token(self):
+        with open("authtoken.json", 'w') as outfile:
+          json.dump(self.authorization, outfile)
 
 
 if __name__ == '__main__':
+    #global config
+
     # Configure
-    Trakt.base_url = 'https://api.trakt.tv'
+    if not os.path.exists("config.json"):
+        raise Exception("Error config.json not found")
+    
+    with open("config.json", 'r') as file:
+        config  = json.load(file)
+        print(config)
+
+    Trakt.base_url = config["trakt"]["base_url"]
 
     Trakt.configuration.defaults.client(
-      id='1f70c35e400a35a1ffa41f9a826401177f4217748e9b52e685df25f992a0f676',
-      secret='2429de6de1e07ab94114a8b75e6caf6b261c566bd5f879a3c40b0b8dab777140'
+      id=config["trakt"]["id"],
+      secret=config["trakt"]["secret"],
     )
     app = Application()
     if os.path.exists("authtoken.json"):
