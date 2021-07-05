@@ -7,6 +7,8 @@ from typing import Optional
 
 from trakt import Trakt
 from pycliarr.api import RadarrCli
+import schedule
+import time
 
 from threading import Condition
 import logging
@@ -17,6 +19,7 @@ from datetime import datetime, timedelta
 logging.basicConfig(level=logging.ERROR)
 
 config = {}
+
 class radarrMovs(object):
     def __init__(self, radarrCli):
       self._radarrMovs = None
@@ -112,7 +115,7 @@ class Application(object):
             mov = self.radarrMovs.getImdb(item.pk[1])
             if mov:
               self.radarrMovs.delete(item.pk[1])
-              print("deleted from radarr: {]".format(mov))
+              print("deleted from radarr: {}".format(mov))
             else:
               print("... no se encuentra en radarr")
         
@@ -193,6 +196,13 @@ class Application(object):
         with open("authtoken.json", 'w') as outfile:
           json.dump(self.authorization, outfile)
 
+def execute():
+    app = Application()
+    if os.path.exists("authtoken.json"):
+        #authorization = os.environ.get('AUTHORIZATION')
+        with open("authtoken.json", 'r') as file:
+            app.authorization = json.load(file)
+    app.run()
 
 if __name__ == '__main__':
     #global config
@@ -211,10 +221,10 @@ if __name__ == '__main__':
       id=config["trakt"]["id"],
       secret=config["trakt"]["secret"],
     )
-    app = Application()
-    if os.path.exists("authtoken.json"):
-        #authorization = os.environ.get('AUTHORIZATION')
-        with open("authtoken.json", 'r') as file:
-            app.authorization = json.load(file)
 
-    app.run()
+    schedule.every(config["schedule_hours"]).hours.do(execute)
+    while True:
+        schedule.run_pending()
+        print("waiting...")
+        time.sleep(60)    
+
