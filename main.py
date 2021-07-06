@@ -193,14 +193,14 @@ class Application(object):
         self.save_token()
 
     def save_token(self):
-        with open("authtoken.json", 'w') as outfile:
+        with open("config/authtoken.json", 'w') as outfile:
           json.dump(self.authorization, outfile)
 
 def execute():
     app = Application()
-    if os.path.exists("authtoken.json"):
+    if os.path.exists("config/authtoken.json"):
         #authorization = os.environ.get('AUTHORIZATION')
-        with open("authtoken.json", 'r') as file:
+        with open("config/authtoken.json", 'r') as file:
             app.authorization = json.load(file)
     app.run()
 
@@ -208,9 +208,9 @@ if __name__ == '__main__':
     #global config
 
     # Configure
-    if not os.path.exists("config.json"):
+    if not os.path.exists("config/config.json"):
         raise Exception("Error config.json not found")
-    with open("config.json", 'r') as file:
+    with open("config/config.json", 'r') as file:
         config  = json.load(file)
         print(config)
     
@@ -222,7 +222,7 @@ if __name__ == '__main__':
     )
 
     # first auth
-    if not os.path.exists("authtoken.json"):
+    if not os.path.exists("config/authtoken.json") or not os.path.isfile("config/authtoken.json") or os.stat("config/authtoken.json").st_size == 0:
         print('auth...')
         app = Application()
         app.authenticate()
