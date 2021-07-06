@@ -210,17 +210,23 @@ if __name__ == '__main__':
     # Configure
     if not os.path.exists("config.json"):
         raise Exception("Error config.json not found")
-    
     with open("config.json", 'r') as file:
         config  = json.load(file)
         print(config)
-
+    
     Trakt.base_url = config["trakt"]["base_url"]
 
     Trakt.configuration.defaults.client(
       id=config["trakt"]["id"],
       secret=config["trakt"]["secret"],
     )
+
+    # first auth
+    if not os.path.exists("authtoken.json"):
+        print('auth...')
+        app = Application()
+        app.authenticate()
+        app.save_token()
 
     schedule.every(config["schedule_hours"]).hours.do(execute)
     while True:
