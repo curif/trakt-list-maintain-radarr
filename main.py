@@ -222,11 +222,13 @@ if __name__ == '__main__':
     )
 
     # first auth
-    if not os.path.exists("config/authtoken.json") or not os.path.isfile("config/authtoken.json") or os.stat("config/authtoken.json").st_size == 0:
+    if not os.path.exists("config/authtoken.json"):
         print('auth...')
         app = Application()
         app.authenticate()
-        app.save_token()
+        if not os.path.exists("config/authtoken.json"):
+            print('Auth failed!')
+            sys.exit(-1)
 
     schedule.every(config["schedule_hours"]).hours.do(execute)
     while True:
