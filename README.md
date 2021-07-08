@@ -37,7 +37,7 @@ Create a json file (you can copy the `config.json.example`) to the `config/` sub
 * days_old: how many days to maintain a movie in disk after you saw it.
 * schedule_hours: time between executions
 * trakt: url, id, secret, and the name of the list to look for movies.
-* radarr: your radar installation information. The ´api_key´ is in ´settings´ -> ´general´ -> ´security´
+* radarr: your radar installation information. The `api_key` is in `settings` -> `general` -> `security`
 
 # first run
 
