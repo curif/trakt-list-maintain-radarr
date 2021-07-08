@@ -1,5 +1,6 @@
 {
     "days_old": 15,
+    "schedule_hours": 12,
     "trakt": {
         "base_url": "https://api.trakt.tv",
         "id": "xxx",
