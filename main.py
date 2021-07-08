@@ -233,6 +233,6 @@ if __name__ == '__main__':
     schedule.every(config["schedule_hours"]).hours.do(execute)
     while True:
         schedule.run_pending()
-        print("waiting...")
+        #print("waiting...")
         time.sleep(60)    
 
