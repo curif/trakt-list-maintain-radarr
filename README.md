@@ -9,7 +9,7 @@ from the Radarr storage and from the Trakt list after I saw it. This script acco
 
 Please read the `requirements.txt` to understand the dependencies.
 
-In particular, the `trakt.py` library needs to connect this application to Trakt, and to give permissions to your Trakt user. For that you need to create a new application in Trakt, and obtain your ´id´ and ´secret´.
+In particular, the `trakt.py` library needs to connect this application to Trakt, and to give permissions to your Trakt user. For that you need to create a new application in Trakt, and obtain your `id` and `secret`.
 
 Goto https://trakt.tv/oauth/applications/new
 
