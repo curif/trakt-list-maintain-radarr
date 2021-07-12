@@ -117,7 +117,7 @@ class Application(object):
               self.radarrMovs.delete(item.pk[1])
               print("deleted from radarr: {}".format(mov))
             else:
-              print("... no se encuentra en radarr")
+              print("... missing in radarr")
         
     
         #https://github.com/fuzeman/trakt.py/blob/master/trakt/interfaces/users/lists/list_.py
