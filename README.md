@@ -1,15 +1,15 @@
 # trakt-list-maintain-radarr
 
-This program combines Radarr with Trakt to download and remove movies from your installation
+This program combines Radarr with Trakt to remove seen movies from your storage.
 
-My working pipeline start identifing a movie (for example seeing a trailer in youtube) and adding the movie to a Trakt list. Later mi Radarr installation detect the movie and download it, because I configure Radarr to see that list in Trakt. All is (almost) fully automated, but I want to remove the movie
+My working pipeline start identifing a movie (for example seeing a trailer in youtube) and adding the movie to a Trakt list. Later mi Radarr installation detect the movie and download it because I configure Radarr to see that list in Trakt. All is (almost) fully automated, but I want to remove the movie
 from the Radarr storage and from the Trakt list after I saw it. This script accomplish those tasks.
 
 # requeriments
 
 Please read the `requirements.txt` to understand the dependencies.
 
-In particular, the `trakt.py` library needs to connect this application to Trakt, and to give permissions to your Trakt user. For that you need to create a new application in Trakt to obtain your `id` and `secret`.
+In particular, the `trakt.py` library needs to connect this application to Trakt, and to give permissions to your Trakt user. For that you will need to create a new application in Trakt to obtain your `id` and `secret`.
 
 Goto https://trakt.tv/oauth/applications/new
 
