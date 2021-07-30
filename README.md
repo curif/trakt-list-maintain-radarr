@@ -1,8 +1,8 @@
 # trakt-list-maintain-radarr
 
-This program combines Radarr with Trakt to remove seen movies from your storage.
+This program combines Radarr with Trakt to remove watched movies from your storage.
 
-My working pipeline start identifing a movie (for example seeing a trailer in youtube) and adding the movie to a Trakt list. Later mi Radarr installation detect the movie and download it because I configure Radarr to see that list in Trakt. All is (almost) fully automated, but I want to remove the movie
+My working pipeline start identifing a movie (for example watching a trailer in youtube) and adding the movie to a Trakt list. Later mi Radarr installation detect the movie and download it (I configure Radarr to look that list in Trakt). All is (almost) fully automated, but I want to remove the movie
 from the Radarr storage and from the Trakt list after I saw it. This script accomplish those tasks.
 
 # requeriments
