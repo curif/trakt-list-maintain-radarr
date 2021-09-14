@@ -16,7 +16,7 @@ import os
 import json
 from datetime import datetime, timedelta
 
-logging.basicConfig(level=logging.ERROR)
+logging.basicConfig(format='%(asctime)s [%(levelname)s] %(message)s', level=logging.INFO)
 
 config = {}
 
@@ -59,7 +59,7 @@ class Application(object):
 
     def authenticate(self):
         if not self.is_authenticating.acquire(blocking=False):
-            print('Authentication has already been started')
+            logging.info('Authentication has already been started')
             return False
 
         # Request new device code
@@ -88,7 +88,7 @@ class Application(object):
           self.authenticate()
 
         if not self.authorization:
-            print('ERROR: Authentication required')
+            logging.error('ERROR: Authentication required')
             exit(1)
      
         #STrakt.configuration.oauth.from_response(self.authorization)   
@@ -101,7 +101,7 @@ class Application(object):
         #Movies seen
         for item in Trakt['sync/history'].get(media='movies', 
                 end_at=datetime.now() - timedelta(days=config["days_old"])):
-            print(' - %-120s (watched_at: %r)' % (
+            logging.info(' - %-120s (watched_at: %r)' % (
                  item.title + " (" + str(item.year) + ")",
                  item.watched_at.strftime('%Y-%m-%d %H:%M:%S')
             ))
@@ -115,20 +115,20 @@ class Application(object):
             mov = self.radarrMovs.getImdb(item.pk[1])
             if mov:
               self.radarrMovs.delete(item.pk[1])
-              print("deleted from radarr: {}".format(mov))
+              logging.info("deleted from radarr: {}".format(mov))
             else:
-              print("... missing in radarr")
+              logging.info("... missing in radarr")
         
     
         #https://github.com/fuzeman/trakt.py/blob/master/trakt/interfaces/users/lists/list_.py
-        print("Delete {} movies from the trakt list {} if they exists".format(len(moviesToDelete), config["trakt"]["list"]))
+        logging.info("Delete {} movies from the trakt list {} if they exists".format(len(moviesToDelete), config["trakt"]["list"]))
         result= Trakt['users/curif/lists/{}'.format(config["trakt"]["list"])].remove(
                 {
                     "movies": moviesToDelete
                 }
             )
-        print("movies borradas: {}".format(result["deleted"]["movies"]))
-
+        logging.info("deleted movies: {}".format(result["deleted"]["movies"]))
+        logging.info("terminated =======")
 
     def on_aborted(self):
         """Device authentication aborted.
@@ -157,7 +157,7 @@ class Application(object):
         # Store authorization for future calls
         self.authorization = authorization
 
-        print('Authentication successful - authorization: %r' % self.authorization)
+        logging.info('Authentication successful - authorization: %r' % self.authorization)
 
         # Authentication complete
         self.is_authenticating.notify_all()
@@ -168,7 +168,7 @@ class Application(object):
     def on_expired(self):
         """Device authentication expired."""
 
-        print('Authentication expired')
+        logging.info('Authentication expired')
 
         # Authentication expired
         self.is_authenticating.acquire()
@@ -189,7 +189,7 @@ class Application(object):
         # OAuth token refreshed, store authorization for future calls
         self.authorization = authorization
 
-        print('Token refreshed - authorization: %r' % self.authorization)
+        logging.info('Token refreshed - authorization: %r' % self.authorization)
         self.save_token()
 
     def save_token(self):
@@ -212,7 +212,7 @@ if __name__ == '__main__':
         raise Exception("Error config.json not found")
     with open("config/config.json", 'r') as file:
         config  = json.load(file)
-        print(config)
+        #print(config)
     
     Trakt.base_url = config["trakt"]["base_url"]
 
@@ -223,16 +223,17 @@ if __name__ == '__main__':
 
     # first auth
     if not os.path.exists("config/authtoken.json"):
-        print('auth...')
+        logging.info('auth...')
         app = Application()
         app.authenticate()
         if not os.path.exists("config/authtoken.json"):
-            print('Auth failed!')
+            logging.error('Auth failed!')
             sys.exit(-1)
 
     schedule.every(config["schedule_hours"]).hours.do(execute)
     while True:
         schedule.run_pending()
-        #print("waiting...")
+        logging.info("waiting...")
         time.sleep(60)    
+
 
