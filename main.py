@@ -99,27 +99,29 @@ class Application(object):
         self.radarrMovs = radarrMovs(RadarrCli(config["radarr"]["url"], config["radarr"]["api_key"]))
         
         #Movies seen
+        logging.info("Looking for Trakt movies history {} days old.".format(config["days_old"]))
         for item in Trakt['sync/history'].get(media='movies', 
                 end_at=datetime.now() - timedelta(days=config["days_old"])):
+            
             logging.info(' - %-120s (watched_at: %r)' % (
                  item.title + " (" + str(item.year) + ")",
                  item.watched_at.strftime('%Y-%m-%d %H:%M:%S')
             ))
-            #Delete from the Trakt List
-            moviesToDelete.append({
-                                "ids": {
-                                    item.pk[0]:  item.pk[1]
-                                }
-                            }) 
+            
             #Delete from Radarr
             mov = self.radarrMovs.getImdb(item.pk[1])
             if mov:
-              self.radarrMovs.delete(item.pk[1])
-              logging.info("deleted from radarr: {}".format(mov))
+              try:
+                self.radarrMovs.delete(item.pk[1])
+                logging.info("deleted from radarr: {}".format(mov))
+                #adding to been deleted from the Trakt List
+                moviesToDelete.append({ "ids": {item.pk[0]: item.pk[1]}})
+              except e:
+                logging.error("deleting from radarr: {} mov:{}, please check".format(e,mov))
             else:
-              logging.info("... missing in radarr")
+                moviesToDelete.append({ "ids": {item.pk[0]: item.pk[1]}})
+                logging.info("is missing in radarr, going to delete from trakt list".format(mov))
         
-    
         #https://github.com/fuzeman/trakt.py/blob/master/trakt/interfaces/users/lists/list_.py
         logging.info("Delete {} movies from the trakt list {} if they exists".format(len(moviesToDelete), config["trakt"]["list"]))
         result= Trakt['users/curif/lists/{}'.format(config["trakt"]["list"])].remove(
@@ -208,12 +210,14 @@ if __name__ == '__main__':
     #global config
 
     # Configure
+    logging.info('Starting... reading configuration')
     if not os.path.exists("config/config.json"):
         raise Exception("Error config.json not found")
     with open("config/config.json", 'r') as file:
         config  = json.load(file)
         #print(config)
-    
+        
+    logging.info('Configuring trakt')
     Trakt.base_url = config["trakt"]["base_url"]
 
     Trakt.configuration.defaults.client(
@@ -222,6 +226,7 @@ if __name__ == '__main__':
     )
 
     # first auth
+    logging.info('Authenticate')
     if not os.path.exists("config/authtoken.json"):
         logging.info('auth...')
         app = Application()
@@ -230,9 +235,12 @@ if __name__ == '__main__':
             logging.error('Auth failed!')
             sys.exit(-1)
 
+    logging.info('Running first time')
+    execute()
+    
+    logging.info('Running every {}hs'.format((config["schedule_hours"])))
     schedule.every(config["schedule_hours"]).hours.do(execute)
     while True:
         schedule.run_pending()
-        time.sleep(60)    
-
+        time.sleep(60)
 
