@@ -98,10 +98,13 @@ class Application(object):
 
         self.radarrMovs = radarrMovs(RadarrCli(config["radarr"]["url"], config["radarr"]["api_key"]))
         
-        #Movies seen
+        #Movies seen, days_old is the time the movie remains on disk.
         logging.info("Looking for Trakt movies history {} days old.".format(config["days_old"]))
-        for item in Trakt['sync/history'].get(media='movies', 
-                end_at=datetime.now() - timedelta(days=config["days_old"])):
+        for item in Trakt['sync/history'].get(media='movies',
+                                              pagination=True,
+                                              end_at=datetime.now() - timedelta(days=config["days_old"]),
+                                              start_at=datetime.now() - timedelta(days=config["starting_at"])
+                                              ):
             
             logging.info(' - %-120s (watched_at: %r)' % (
                  item.title + " (" + str(item.year) + ")",
@@ -116,15 +119,15 @@ class Application(object):
                 logging.info("deleted from radarr: {}".format(mov))
                 #adding to been deleted from the Trakt List
                 moviesToDelete.append({ "ids": {item.pk[0]: item.pk[1]}})
-              except e:
-                logging.error("deleting from radarr: {} mov:{}, please check".format(e,mov))
+              except Exception as e:
+                logging.error("deleting from radarr: {} mov:{}, please check".format(e, mov.title))
             else:
                 moviesToDelete.append({ "ids": {item.pk[0]: item.pk[1]}})
-                logging.info("is missing in radarr, going to delete from trakt list".format(mov))
+                logging.info("is missing in radarr, going to delete from trakt list anyway".format(mov))
         
         #https://github.com/fuzeman/trakt.py/blob/master/trakt/interfaces/users/lists/list_.py
         logging.info("Delete {} movies from the trakt list {} if they exists".format(len(moviesToDelete), config["trakt"]["list"]))
-        result= Trakt['users/curif/lists/{}'.format(config["trakt"]["list"])].remove(
+        result = Trakt['users/{}/lists/{}'.format(config["trakt"]["user"], config["trakt"]["list"])].remove(
                 {
                     "movies": moviesToDelete
                 }

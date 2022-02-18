@@ -20,12 +20,14 @@ Create a json file (you can copy the `config.json.example`) to the `config/` sub
 ```json
 {
     "days_old": 15,
+    "starting_at": 90,
     "schedule_hours": 12,
     "trakt": {
         "base_url": "https://api.trakt.tv",
         "id": "xxx",
         "secret": "xxx",
-        "list": "xx"
+        "list": "xx",
+        "user": "yourTraktUser"
     },
     "radarr": {
         "url": "http://192.168.0.10:7878", 
@@ -35,8 +37,9 @@ Create a json file (you can copy the `config.json.example`) to the `config/` sub
 ```
 
 * days_old: how many days a movie remain in disk after you saw it.
+* starting_at: how many days in the past you want to start looking for watched movies. 
 * schedule_hours: time between executions
-* trakt: url, id, secret, and the name of the list to look for new movies.
+* trakt: url, id, secret, user, and the name of the list to look for new movies.
 * radarr: your radar installation information. The `api_key` is in `settings` -> `general` -> `security`
 
 # first run
