@@ -91,8 +91,8 @@ class Application(object):
             logging.error('ERROR: Authentication required')
             exit(1)
      
-        #STrakt.configuration.oauth.from_response(self.authorization)   
-        Trakt.configuration.defaults.oauth.from_response(self.authorization)
+        Trakt.configuration.defaults.oauth.from_response(self.authorization,   
+                refresh=True
         
         moviesToDelete = []
 
